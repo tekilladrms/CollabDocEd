@@ -1,0 +1,52 @@
+﻿@model CollabDocEd.Models.ProjectModels.CreateProjectViewModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+
+<h2 class="text-center">Create new project</h2>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md">
+            <form method="post" asp-controller="Project" asp-action="CreateProject" enctype="multipart/form-data">
+                <div class="validation" asp-validation-summary="ModelOnly"></div>
+                <div class="form-group">
+                    <label asp-for="Name">Name</label>
+                    <input asp-for="Name" type="text" class="form-control" placeholder="Enter name">
+                    <span asp-validation-for="Name" />
+                    <small class="form-text text-muted">Name of the project</small>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Description">Description</label>
+                    <textarea asp-for="Description" class="form-control" placeholder="Enter description" rows="3"></textarea>
+                    <small class="form-text text-muted">Short description</small>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Creator" />
+                    <input asp-for="Creator" type="hidden" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Id" />
+                    <input asp-for="Id" type="hidden" class="form-control">
+
+                </div>
+
+                <div class="form-group">
+
+                    <input asp-for="File" type="file" name="file" />
+                    <span asp-validation-for="File" />
+                </div>
+                <input type="submit" class="btn btn-primary" value="Create" />
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

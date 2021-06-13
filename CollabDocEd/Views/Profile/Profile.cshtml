@@ -1,0 +1,69 @@
+﻿
+@model CollabDocEd.Models.ProfileViewModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+
+
+}
+
+
+@if (User.Identity.IsAuthenticated)
+{
+
+    <div class="row">
+
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>My projects</h4>
+                </div>
+                <div class="card-body">
+
+                    @if (Model.Projects.Count == 0)
+                    {
+                        <span class="text-muted small">You have not active projects yet</span>
+                    }
+                    <a class="btn btn-primary btn-sm" asp-controller="Project" asp-action="CreateProject">Create new project</a>
+                    <hr />
+                    <ul class="projects">
+
+                        @foreach (var el in Model.Projects)
+                        {
+                            <li class="projects-item">
+                                <a href="" class="btn"
+                                   data-ajax="true"
+                                   data-ajax-method="GET"
+                                   data-ajax-url="/Project/ProjectDetails/@el.Id"
+                                   data-ajax-update="#projectDetails">
+
+                                    @el.Name
+                                    @if (el.IsFinished)
+                                    {
+                                        <i class="fas fa-edit"></i>
+                                        <i class="fas fa-stop"></i>
+                                    }
+
+
+                                </a>
+
+                            </li>
+                        }
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+       
+        <div class="col-md" id="projectDetails"></div>
+    </div>
+
+
+}
+
+@section scripts{
+
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
+
+

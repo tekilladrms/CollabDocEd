@@ -1,0 +1,121 @@
+﻿
+@model CollabDocEd.Models.ProjectModels.ProjectDetailsViewModel
+
+
+
+
+<div class="row">
+    <div class="col-md">
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <h4 style="margin-right:20px">Project details</h4>
+
+            <div class="modal fade" id="addDocumentModalView" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" id="addDocument" role="document">
+
+                </div>
+            </div>
+            <div class="modal fade" id="inviteUserToProjectModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" id="inviteUserToProject" role="document">
+
+                </div>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Documents</a>
+                        <div class="dropdown-menu">
+                            <a href=""
+                               data-ajax="true"
+                               data-ajax-method="GET"
+                               data-ajax-url="/Document/AddDocument/?projectId=@Model.Id"
+                               data-ajax-update="#addDocument"
+                               class="nav-link dropdown-item"
+                               data-toggle="modal"
+                               data-target="#addDocumentModalView">
+
+                                Add document
+                            </a>
+
+                            <a href=""
+                               data-ajax="true"
+                               data-ajax-method="GET"
+                               data-ajax-url="/Document/GetAllDocuments/@Model.Id"
+                               data-ajax-update="#divInfo"
+                               class="nav-link dropdown-item"
+                               >
+
+
+                                All documents
+                            </a>
+                            <div class="dropdown-divider"></div>
+
+                        </div>
+                    </li>
+
+                    @if (Model.Creator == User.Identity.Name)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Users</a>
+                            <div class="dropdown-menu">
+                                <a href=""
+                                   data-ajax="true"
+                                   data-ajax-method="GET"
+                                   data-ajax-url="/Project/InviteUserToProject/?projectId=@Model.Id"
+                                   data-ajax-update="#inviteUserToProject"
+                                   class="nav-link"
+                                   data-toggle="modal"
+                                   data-target="#inviteUserToProjectModal">
+
+                                    Invite user
+                                </a>
+                                
+                                <a href="" class="nav-link dropdown-item"
+                                   data-ajax="true"
+                                   data-ajax-method="GET"
+                                   data-ajax-url="/Project/GetAllUsers/@Model.Id"
+                                   data-ajax-update="#divInfo">
+                                    All users
+                                </a>
+                                <div class="dropdown-divider"></div>
+
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Project" asp-action="DisableProject">Disable project</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Project" asp-action="DeleteProject">Delete project</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </nav>
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <span class="text-muted small">Creator: @Model.Creator</span>
+        <br />
+        <span class="text-muted small">Created: @Model.CreateTime</span>
+    </div>
+</div>
+
+<div id="divInfo">
+    @*@RenderSectionAsync("_AllDocuments")*@
+</div>
+
+
+
+@section scripts{
+
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
+
+
+
