@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using CollabDocEd.Models.ProjectModels;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CollabDocEd.Domain
 {
-    public class Document
+    public class Document : IOnScreen
     {
         public int Id { get; set; }
         public string Description { get; set; }

@@ -4,17 +4,20 @@
 }
 
 
-<a href=""
-   data-ajax="true"
-   data-ajax-method="GET"
-   data-ajax-url="/Project/InviteUserToProject/?projectId=@Model.ProjectId"
-   data-ajax-update="#inviteUserToProject"
-   class="btn btn-success"
-   data-toggle="modal"
-   data-target="#inviteUserToProjectModal">
+@if (User.Identity.Name == Model.Creator)
+{
+    <a href=""
+       data-ajax="true"
+       data-ajax-method="GET"
+       data-ajax-url="/Project/InviteUserToProject/?projectId=@Model.ProjectId"
+       data-ajax-update="#inviteUserToProject"
+       class="btn btn-success"
+       data-toggle="modal"
+       data-target="#inviteUserToProjectModal">
 
-    Invite user
-</a>
+        Invite user
+    </a>
+}
 <hr />
 <table class="table table-hover">
     <thead>
@@ -27,13 +30,16 @@
     <tbody>
         @foreach (var el in Model.Users)
         {
-            <tr>
+        <tr>
 
-                <td>
-                    @el.Email
+            <td>
+                @el.Email
 
-                </td>
-                
+            </td>
+
+            @if (User.Identity.Name == Model.Creator)
+
+            {
                 <td>
                     @if (el.Email != Model.Creator)
                     {
@@ -51,8 +57,9 @@
                         <p>Creator has not be exclude</p>
                     }
                 </td>
+            }
 
-            </tr>
+        </tr>
         }
     </tbody>
 </table>

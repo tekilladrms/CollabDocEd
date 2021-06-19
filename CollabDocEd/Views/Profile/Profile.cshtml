@@ -12,7 +12,7 @@
 
     <div class="row">
 
-        <div class="col-md-2">
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     <h4>My projects</h4>
@@ -35,15 +35,7 @@
                                    data-ajax-method="GET"
                                    data-ajax-url="/Project/ProjectDetails/@el.Id"
                                    data-ajax-update="#projectDetails">
-
                                     @el.Name
-                                    @if (el.IsFinished)
-                                    {
-                                        <i class="fas fa-edit"></i>
-                                        <i class="fas fa-stop"></i>
-                                    }
-
-
                                 </a>
 
                             </li>

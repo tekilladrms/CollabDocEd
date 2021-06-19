@@ -4,6 +4,8 @@ using CollabDocEd.AuthorizationRequirements;
 using CollabDocEd.Domain;
 using CollabDocEd.EF;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -33,18 +35,21 @@ namespace CollabDocEd
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            services.AddRazorPages();
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
+            //add accessor for get endpoints in AuthorizationHandlers
+            services.AddHttpContextAccessor();
+
             var awsOptions = Configuration.GetAWSOptions();
             services.AddDefaultAWSOptions(awsOptions);
 
             //add Identity
-            services.AddDefaultIdentity<IdentityUser>(options =>
+            services.AddDefaultIdentity<ApplicationUser>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false;
                 options.Password.RequireDigit = false;
@@ -52,9 +57,9 @@ namespace CollabDocEd
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequiredUniqueChars = 0;
-                
+
             })
-                
+
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             //Add OAuth authentication
@@ -62,8 +67,10 @@ namespace CollabDocEd
                 .AddCookie()
                 .AddGoogle(options =>
                 {
+                    
                     options.ClientId = Configuration["App:GoogleClientId"];
                     options.ClientSecret = Configuration["App:GoogleClientSecret"];
+                    
                 })
                 
                 .AddVkontakte(options =>
@@ -72,9 +79,15 @@ namespace CollabDocEd
                     options.ClientSecret = Configuration["App:VkClientSecret"];
                 });
 
+            //register AuthorizationHandlers
+            services.AddTransient<IAuthorizationHandler, ShouldBeInvitedHandler>();
+            //services.AddTransient<IAuthorizationHandler, ShouldBeCreatorHandler>();
+
+            //add policies
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("ShouldBeInvited", policy => policy.Requirements.Add(new ShouldBeInvited()));
+                //options.AddPolicy("ShouldBeCreator", policy => policy.Requirements.Add(new ShouldBeCreator()));
             });
 
             services.AddRazorPages();
@@ -105,6 +118,7 @@ namespace CollabDocEd
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");

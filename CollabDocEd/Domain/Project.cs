@@ -22,7 +22,7 @@ namespace CollabDocEd.Domain
         
         public virtual List<Comment> Comments { get; set; }
         public virtual List<Document> Documents { get; set; }
-        public virtual List<IdentityUser> Users { get; set; }
+        public virtual List<ApplicationUser> Users { get; set; }
 
     }
 }

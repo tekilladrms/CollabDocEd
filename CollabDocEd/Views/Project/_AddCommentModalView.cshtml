@@ -1,0 +1,50 @@
+﻿@model CollabDocEd.Models.DocumentModels.CommentModel
+@{
+}
+
+
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">Adding comment</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form method="post"
+              data-ajax="true"
+              data-ajax-mode="replace"
+              data-ajax-update="#commentsContainer"
+              id="form0"
+              data-ajax-success="closeWindow"
+              asp-controller="Project"
+              asp-action="AddComment">
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div class="form-group">
+                <label asp-for="Text">Text</label>
+                <textarea asp-for="Text" class="form-control" placeholder="Enter text" rows="3"></textarea>
+                <small class="form-text text-muted">Comment</small>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProjectId" />
+                <input asp-for="ProjectId" type="hidden" class="form-control">
+            </div>
+            <div class="form-group">
+                <label asp-for="UserEmail" />
+                <input asp-for="UserEmail" type="hidden" class="form-control">
+            </div>
+
+
+            <input type="submit" class="btn btn-primary" value="Add" />
+        </form>
+    </div>
+
+</div>
+
+
+<script>
+    closeWindow = function () {
+        $("#addCommentModalView").modal('hide')
+    }
+</script>

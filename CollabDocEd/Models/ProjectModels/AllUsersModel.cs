@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using CollabDocEd.Domain;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,6 @@ namespace CollabDocEd.Models.ProjectModels
     {
         public int ProjectId { get; set; }
         public string Creator { get; set; }
-        public List<IdentityUser> Users { get; set; }
+        public List<ApplicationUser> Users { get; set; }
     }
 }

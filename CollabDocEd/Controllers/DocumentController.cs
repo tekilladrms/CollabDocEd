@@ -23,8 +23,8 @@ namespace CollabDocEd.Controllers
     public class DocumentController : Controller
     {
         private ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        public DocumentController(UserManager<IdentityUser> userManager, ApplicationDbContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public DocumentController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _context = context;
             _userManager = userManager;
@@ -68,8 +68,11 @@ namespace CollabDocEd.Controllers
             }
 
             //Get current user and project from db
-            IdentityUser user = await _userManager.GetUserAsync(User);
-            Project project = await _context.Projects.Include(p => p.Documents).FirstOrDefaultAsync(item => item.Id == vm.ProjectId);
+            ApplicationUser user = await _userManager.GetUserAsync(User);
+            Project project = await _context.Projects
+                .Include(p => p.Documents)
+                .Include(p => p.Comments)
+                .FirstOrDefaultAsync(item => item.Id == vm.ProjectId);
 
             //Create document
             Document document = new Document();
@@ -88,12 +91,15 @@ namespace CollabDocEd.Controllers
                 _context.Update(project);
                 await _context.SaveChangesAsync();
             }
-
-            return PartialView("_AllDocuments", new AllDocumentsModel() 
+            List<IOnScreen> onScreens = new List<IOnScreen>();
+            onScreens.AddRange(project.Documents);
+            onScreens.AddRange(project.Comments);
+            onScreens.GroupBy(item => item.Created);
+            return PartialView("_AllDocuments", new AllDocumentsModel()
             {
                 Documents = project.Documents,
                 Creator = project.CreatorEmail,
-                ProjectId = project.Id
+                ProjectId = project.Id,
             });
         }
 
@@ -106,6 +112,7 @@ namespace CollabDocEd.Controllers
             
             return result;
         }
+        
 
         public async Task<IActionResult> DeleteFile(int projectId, int fileId)
         {
@@ -131,5 +138,18 @@ namespace CollabDocEd.Controllers
             });
 
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllComments(int documentId)
+        {
+            var document = await _context.Documents.Include(d => d.Comments).FirstOrDefaultAsync(item => item.Id == documentId);
+            return PartialView("_AllComments", new AllCommentsModel()
+            { 
+                Comments = document.Comments,
+                DocumentId = document.Id
+            });
+        }
+
     }
 }

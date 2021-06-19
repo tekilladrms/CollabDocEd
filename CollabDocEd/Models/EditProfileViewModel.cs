@@ -11,7 +11,7 @@ namespace CollabDocEd.Models
     {
         public string Name { get; set; }
         public byte[] Photo { get; set; }
-        public virtual IdentityUser IdentityUser { get; set; }
+        public virtual ApplicationUser ApplicationUser { get; set; }
         
     }
 }

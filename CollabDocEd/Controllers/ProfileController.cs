@@ -10,14 +10,15 @@ using System.Threading.Tasks;
 using CollabDocEd.Domain;
 using CollabDocEd.EF;
 using CollabDocEd.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CollabDocEd.Controllers
 {
     public class ProfileController : Controller
     {
         private ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        public ProfileController(UserManager<IdentityUser> userManager, ApplicationDbContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public ProfileController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _context = context;
             _userManager = userManager;
@@ -45,12 +46,13 @@ namespace CollabDocEd.Controllers
             ProfileViewModel vm = new ProfileViewModel();
             vm.Email = profile.Email;
             vm.Name = profile.Name;
-            vm.Projects = _context.Projects.Where(item => item.CreatorEmail == profile.Email).ToList();
+            vm.Projects = await _context.Projects.Where(item => item.CreatorEmail == profile.Email).ToListAsync();
+            vm.Projects.AddRange( await _context.Projects.Where(item => item.Users.Any(el => el.Email == profile.Email)).ToListAsync());
 
             return View(vm);
         }
 
-        private ClientProfile CreateProfile(IdentityUser user)
+        private ClientProfile CreateProfile(ApplicationUser user)
         {
             ClientProfile profile = new ClientProfile();
             profile.Id = user.Id;

@@ -1,0 +1,41 @@
+﻿@model CollabDocEd.Models.DocumentModels.AllCommentsModel
+@{
+}
+
+<a href=""
+   data-ajax="true"
+   data-ajax-method="GET"
+   data-ajax-url="/Document/AddComment/?documentId=@Model.DocumentId"
+   data-ajax-update="#addComment"
+   class="btn btn-success btn-sm"
+   data-toggle="modal"
+   data-target="#addCommentModalView">
+
+    +
+</a>
+
+@if (Model.Comments.Count > 0)
+{
+    @*<ul>
+        @foreach (var el in Model.Comments)
+        {
+        <li class="comment">
+            <p class="small">@el.UserEmail</p>
+            <p>@el.Text</p>
+            <p class="small">@el.Date</p>
+        </li>
+        }
+    </ul>*@
+
+    @*<form data-ajax="true"
+          data-ajax-method="POST"
+          data-ajax-update="#commentsContainer"
+          data-ajax-url=""
+          data-ajax-mode="re">
+
+    </form>*@
+}
+else
+{
+    <p>No comments yet</p>
+}

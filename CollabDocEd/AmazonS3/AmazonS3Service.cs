@@ -2,6 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using CollabDocEd.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -113,6 +114,21 @@ namespace CollabDocEd.AmazonS3
                 };
 
                 await client.DeleteObjectAsync(request);
+            }
+        }
+        public async Task DeleteDocumentsFromBucket(List<KeyVersion> keyVersions)
+        {
+            using (var client = new AmazonS3Client(_accessKey, _secretKey, RegionEndpoint.USEast1))
+            {
+                var request = new DeleteObjectsRequest()
+                {
+                    BucketName = _bucketName,
+                    Objects = keyVersions
+
+                };
+
+                await client.DeleteObjectsAsync(request);
+                
             }
         }
 

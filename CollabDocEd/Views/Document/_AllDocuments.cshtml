@@ -1,55 +1,56 @@
 ﻿@model CollabDocEd.Models.DocumentModels.AllDocumentsModel
 
+
+
+    <div class="modal fade" id="addCommentModalView" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" id="addComment" role="document">
+
+        </div>
+    </div>
+
 <a href=""
    data-ajax="true"
    data-ajax-method="GET"
    data-ajax-url="/Document/AddDocument/?projectId=@Model.ProjectId"
    data-ajax-update="#addDocument"
-   class="btn btn-success"
+   class="btn btn-success btn-sm"
    data-toggle="modal"
    data-target="#addDocumentModalView">
 
     Add document
 </a>
 <hr />
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th scope="col">FileName</th>
-            <th scope="col">Description</th>
-            <th scope="col">Created</th>
-            <th scope="col">Creator</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var el in Model.Documents)
-        {
-            <tr>
+<ul>
+    @foreach(var el in Model.Documents)
+    {
+        <li>
+            <div id="@el.Id" class="row clickable-row">
+                <div class="col-md">@el.Filename</div>
+                <div class="col-md">@el.Description</div>
+                <div class="col-md">@el.Creator</div>
+                <div class="col-md">@el.Created</div>
+            </div>
+            <div class="row">
+                <div id="commentsContainer" class="col">
 
-                <td>
-                    <a download asp-controller="Document" asp-action="DownloadFile" asp-route-id="@el.Id">@el.Filename</a>
-                </td>
-                <td>
-                    @el.Description
-                </td>
-                <td>
-                    @el.Created
-                </td>
-                <td>
-                    @el.Creator
-                </td>
-                @if (Model.Creator == User.Identity.Name || el.Creator == User.Identity.Name)
-                {
-                    <td>
-                        <a href=""
-                           data-ajax="true"
-                           data-ajax-method="POST"
-                           data-ajax-url="/Document/DeleteFile/?projectId=@Model.ProjectId&fileId=@el.Id"
-                           data-ajax-update="#divInfo"
-                           class="btn btn-danger">Delete</a>
-                    </td>
-                }
-            </tr>
-        }
-    </tbody>
-</table>
+                </div>
+            </div>
+        </li>
+    }
+</ul>
+
+<script>
+
+    jQuery(document).ready(function ($) {
+        $(".clickable-row").click(function () {
+            $.ajax({
+                url: "/Document/GetAllComments",
+                data: {
+                    documentId: this.id
+                },
+                success: function (data) { $("#commentsContainer").html(data); }
+            });
+        });
+        
+    });
+</script>

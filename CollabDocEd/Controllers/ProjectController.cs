@@ -5,6 +5,7 @@ using CollabDocEd.AuthorizationRequirements;
 using CollabDocEd.Domain;
 using CollabDocEd.EF;
 using CollabDocEd.Models;
+using CollabDocEd.Models.DocumentModels;
 using CollabDocEd.Models.ProjectModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,10 +24,10 @@ namespace CollabDocEd.Controllers
     public class ProjectController : Controller
     {
         private ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
 
-        public ProjectController(UserManager<IdentityUser> userManager, ApplicationDbContext context)
+        public ProjectController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _context = context;
             _userManager = userManager;
@@ -36,26 +37,82 @@ namespace CollabDocEd.Controllers
             return View();
         }
 
-        [Authorize(Policy="ShouldBeInvited")]
+        [Authorize(Policy = "ShouldBeInvited")]
         [HttpGet]
         public async Task<PartialViewResult> ProjectDetails(int id)
         {
-            var project = await _context.Projects.FirstOrDefaultAsync(item => item.Id == id);
+            var project = await _context.Projects
+                .Include(p => p.Comments).AsNoTracking()
+                .Include(p => p.Documents).AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == id);
             var vm = new ProjectDetailsViewModel();
-            if (project != null)
+
+            List<IOnScreen> onScreens = new List<IOnScreen>();
+            onScreens.AddRange(project.Documents);
+            onScreens.AddRange(project.Comments);
+            onScreens.GroupBy(item => item.Created);
+            return PartialView("_ProjectDetails", new ProjectDetailsViewModel()
             {
-                vm.Id = project.Id;
-                vm.Creator = project.CreatorEmail;
-                vm.CreateTime = project.CreateTime;
-                vm.IsFinished = project.IsFinished;
-                
-                vm.Users = project.Users;
-                vm.Comments = project.Comments;
+                Name = project.Name,
+                CreateTime = project.CreateTime,
+                Creator = project.CreatorEmail,
+                Id = project.Id,
+                onScreens = onScreens
+            });
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> AddComment(int projectId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var vm = new CommentModel();
+            vm.ProjectId = projectId;
+            vm.UserEmail = user.Email;
+            return PartialView("_AddCommentModalView", vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddComment(CommentModel vm)
+        {
+            if (String.IsNullOrEmpty(vm.Text))
+            {
+                return BadRequest();
             }
 
+            //get the project
+            var project = await _context.Projects
+                .Include(p => p.Comments)
+                .Include(p => p.Documents)
+                .FirstOrDefaultAsync(item => item.Id == vm.ProjectId);
 
-            return PartialView("_ProjectDetails", vm);
+            //create comment
+            Comment comment = new Comment()
+            {
+                Description = vm.Text,
+                Creator = vm.UserEmail
+            };
+
+            //add comment to project and save changes
+            project.Comments.Add(comment);
+            _context.Update(project);
+            await _context.SaveChangesAsync();
+
+            List<IOnScreen> onScreens = new List<IOnScreen>();
+            onScreens.AddRange(project.Documents);
+            onScreens.AddRange(project.Comments);
+            onScreens.GroupBy(item => item.Created);
+            return PartialView("_ProjectDetails", new ProjectDetailsViewModel()
+            {
+                Name = project.Name,
+                CreateTime = project.CreateTime,
+                Creator = project.CreatorEmail,
+                Id = project.Id,
+                onScreens = onScreens
+            });
         }
+
+
 
         [HttpGet]
         public IActionResult CreateProject()
@@ -79,7 +136,7 @@ namespace CollabDocEd.Controllers
                 project.Description = vm.Description;
                 project.CreatorEmail = vm.Creator;
                 project.Documents = new List<Document>();
-                project.Users = new List<IdentityUser>();
+                project.Users = new List<ApplicationUser>();
 
                 //Create document
                 var document = new Document();
@@ -87,6 +144,7 @@ namespace CollabDocEd.Controllers
                 document.Description = vm.Description;
                 document.Filename = vm.File.FileName;
 
+                // Upload document to Amazon s3
                 var s3 = new AmazonS3Service();
                 document.FileVersion = await s3.UploadDocumentToBucket(vm.File, vm.Name);
 
@@ -96,6 +154,8 @@ namespace CollabDocEd.Controllers
                 //add document and user to the project
                 project.Documents.Add(document);
                 project.Users.Add(user);
+                
+                
 
                 await _context.Projects.AddAsync(project);
                 await _context.SaveChangesAsync();
@@ -117,11 +177,11 @@ namespace CollabDocEd.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var vm = new AllUsersModel();
-            
+
             //get project
             var project = await _context.Projects.Include(p => p.Users).FirstOrDefaultAsync(item => item.Id == id);
 
-            if(!project.Users.Contains(user))
+            if (!project.Users.Contains(user))
             {
                 project.Users.Add(user);
                 _context.Update(project);
@@ -135,7 +195,7 @@ namespace CollabDocEd.Controllers
             return PartialView("_AllUsers", vm);
         }
 
-
+        //[Authorize(Policy = "ShouldBeCreator")]
         [HttpGet]
         public IActionResult InviteUserToProject(int projectId)
         {
@@ -143,23 +203,34 @@ namespace CollabDocEd.Controllers
             vm.ProjectId = projectId;
             return PartialView("_InviteUserToProjectModalView", vm);
         }
+
+        //[Authorize(Policy = "ShouldBeCreator")]
         [HttpPost]
         public async Task<IActionResult> InviteUserToProject(InviteUserToProjectModel vm)
         {
             if (ModelState.IsValid)
             {
                 var invitedUser = await _userManager.FindByEmailAsync(vm.UserEmail);
+
                 //check existing user
-                if(invitedUser == null)
+                if (invitedUser == null)
                 {
                     return NotFound();
                 }
+
                 //Get the project
                 var project = await _context.Projects.Include(el => el.Users).FirstOrDefaultAsync(item => item.Id == vm.ProjectId);
 
-                project.Users.Add(invitedUser);
-                _context.Update(project);
-                await _context.SaveChangesAsync();
+                if(project != null)
+                {
+                    if(project.Users.Contains(invitedUser))
+                    {
+                        
+                    }
+                    project.Users.Add(invitedUser);
+                    _context.Update(project);
+                    await _context.SaveChangesAsync();
+                }
 
                 return PartialView("_AllUsers", new AllUsersModel()
                 {
@@ -168,20 +239,21 @@ namespace CollabDocEd.Controllers
                     Creator = project.CreatorEmail
                 });
             }
-            else 
+            else
             {
                 return View(vm);
             }
-            
+
         }
 
+        //[Authorize(Policy = "ShouldBeCreator")]
         [HttpPost]
         public async Task<IActionResult> ExcludeUserFromProject(int projectId, string userId)
         {
             //get current project
             var project = await _context.Projects.Include(p => p.Users).FirstOrDefaultAsync(item => item.Id == projectId);
 
-            if(project != null)
+            if (project != null)
             {
                 //get removing user
                 var user = await _userManager.FindByIdAsync(userId);
@@ -200,10 +272,40 @@ namespace CollabDocEd.Controllers
             else
             {
                 return NotFound();
-            } 
+            }
         }
 
 
+
+        [HttpGet]
+        public IActionResult DeleteProject(int projectId)
+        {
+            return PartialView("_DeleteProjectModal", new DeleteProjectModel() { ProjectId = projectId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProject(DeleteProjectModel vm)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Comments)
+                .Include(p => p.Documents)
+                .FirstOrDefaultAsync(item => item.Id == vm.ProjectId);
+
+            var s3 = new AmazonS3Service();
+            var versions = new List<KeyVersion>();
+
+            foreach(var el in project.Documents)
+            {
+                versions.Add(new KeyVersion() { Key = el.Filename, VersionId = el.FileVersion });
+            }
+
+            await s3.DeleteDocumentsFromBucket(versions);
+            _context.RemoveRange(project.Documents);
+            _context.RemoveRange(project.Comments);
+            _context.Remove(project);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index", "Home");
+        }
     }
 
 }

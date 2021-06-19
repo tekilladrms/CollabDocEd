@@ -12,13 +12,16 @@ namespace CollabDocEd.Models.ProjectModels
     public class ProjectDetailsViewModel
     {
         public int Id { get; set; }
+        public string Name { get; set; }
         public string Creator { get; set; }
         public DateTime CreateTime { get; set; }
         public bool IsFinished { get; set; }
 
+        public List<IOnScreen> onScreens { get; set; }
+
         public List<Document> Documents { get; set; }
         public List<Comment> Comments { get; set; }
-        public List<IdentityUser> Users { get; set; }
+        public List<ApplicationUser> Users { get; set; }
 
 
         
